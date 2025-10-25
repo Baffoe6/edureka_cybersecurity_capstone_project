@@ -32,15 +32,18 @@ jobs:
         sudo apt-get install -y nmap nikto dirb gobuster hydra sqlmap
         
         # Install container security tools
-        wget https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.45.0_Linux-64bit.tar.gz
-        tar -xzf trivy_0.45.0_Linux-64bit.tar.gz
+        wget https://github.com/aquasecurity/trivy/releases/latest/download/trivy_Linux-64bit.tar.gz
+        tar -xzf trivy_Linux-64bit.tar.gz
         sudo mv trivy /usr/local/bin/
         
         # Install SAST tools
-        pip install bandit safety semgrep
+        pip install bandit safety semgrep pip-audit
         
         # Install dependency scanners
         npm install -g audit-ci retire
+        
+        # Install Checkov for infrastructure scanning
+        pip install checkov
         
         # Install infrastructure scanning
         wget https://releases.hashicorp.com/terraform/1.6.0/terraform_1.6.0_linux_amd64.zip
@@ -76,7 +79,12 @@ jobs:
         echo "🌐 Running Dynamic Application Security Testing..."
         
         # Load target configuration
-        source target_info.txt
+        if [ -f target_info.txt ]; then
+          source target_info.txt
+        else
+          echo "TARGET_IP=127.0.0.1" > target_info.txt
+          source target_info.txt
+        fi
         
         # OWASP ZAP scanning
         docker run -t owasp/zap2docker-stable zap-baseline.py -t http://$TARGET_IP -J zap-report.json || true
@@ -130,14 +138,22 @@ jobs:
       run: |
         echo "📦 Running Dependency Security Scanning..."
         
-        # Node.js dependency scanning
-        npm audit --json > npm-audit-report.json || true
+        # Node.js dependency scanning (if package.json exists)
+        if [ -f package.json ]; then
+          npm audit --json > npm-audit-report.json || true
+        else
+          echo '{"vulnerabilities": []}' > npm-audit-report.json
+        fi
         
         # Python dependency scanning
         pip-audit --format=json --output=pip-audit-report.json || true
         
-        # Retire.js scanning
-        retire --outputformat json --outputpath retire-report.json || true
+        # Retire.js scanning (if package.json exists)
+        if [ -f package.json ]; then
+          retire --outputformat json --outputpath retire-report.json || true
+        else
+          echo '{"data": []}' > retire-report.json
+        fi
         
         # Generate dependency security summary
         echo "Dependency Security Analysis Complete" > dependency-summary.txt
