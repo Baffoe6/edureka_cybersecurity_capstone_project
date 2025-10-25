@@ -1,0 +1,66 @@
+# Docker Compose for Cybersecurity Capstone Project
+# Multi-service setup for penetration testing environment
+
+version: '3.8'
+
+services:
+  # Main penetration testing environment
+  pentest-env:
+    build: .
+    container_name: cybersecurity-capstone
+    volumes:
+      - ./reports:/app/reports
+      - ./logs:/app/logs
+      - ./wordlists:/app/wordlists
+      - ./target_info.txt:/app/target_info.txt
+    environment:
+      - TARGET_IP=${TARGET_IP:-127.0.0.1}
+      - TARGET_DOMAIN=${TARGET_DOMAIN:-localhost}
+    networks:
+      - pentest-network
+    command: ["bash", "-c", "echo 'Penetration Testing Environment Ready' && tail -f /dev/null"]
+
+  # Web server for hosting reports (optional)
+  report-server:
+    image: nginx:alpine
+    container_name: report-server
+    ports:
+      - "8080:80"
+    volumes:
+      - ./reports:/usr/share/nginx/html:ro
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - pentest-env
+    networks:
+      - pentest-network
+
+  # Database for storing assessment results (optional)
+  assessment-db:
+    image: postgres:15-alpine
+    container_name: assessment-db
+    environment:
+      - POSTGRES_DB=pentest_results
+      - POSTGRES_USER=pentest_user
+      - POSTGRES_PASSWORD=pentest_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - pentest-network
+
+  # Redis for caching scan results (optional)
+  redis-cache:
+    image: redis:7-alpine
+    container_name: redis-cache
+    volumes:
+      - redis_data:/data
+    networks:
+      - pentest-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  pentest-network:
+    driver: bridge

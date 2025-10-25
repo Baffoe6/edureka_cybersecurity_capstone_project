@@ -1,0 +1,71 @@
+# .dockerignore file for Cybersecurity Capstone Project
+# Excludes unnecessary files from Docker build context
+
+# Git files
+.git
+.gitignore
+
+# Documentation files
+*.md
+README.md
+PROJECT_GUIDE.md
+CI_CD_README.md
+
+# Large files
+*.ova
+*.vmdk
+*.vdi
+*.iso
+
+# Log files
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-*
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# Node modules
+node_modules/
+npm-debug.log*
+
+# Docker files
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# CI/CD files
+.github/
+
+# Reports (will be mounted as volume)
+reports/
+
+# Backup files
+*.bak
+*.backup

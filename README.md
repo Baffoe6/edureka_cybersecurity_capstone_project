@@ -7,8 +7,14 @@ This capstone project provides a comprehensive framework for performing ethical 
 ```
 edureka_cybersecurity_capstone_project/
 ├── README.md                           # Project overview and guide
+├── DOCKER_README.md                    # Docker setup and usage guide
 ├── run_assessment.bat                  # Windows execution script
 ├── run_assessment.sh                   # Linux/Mac execution script
+├── docker-manage.sh                    # Docker management script
+├── Dockerfile                          # Docker container definition
+├── docker-compose.yml                  # Multi-service Docker setup
+├── docker.env                          # Docker environment variables
+├── .dockerignore                       # Docker build exclusions
 ├── target_info.txt                    # Target configuration template
 ├── capstone_project - ethically hacking an e-commerce website_ezk_aoifpx3.pdf
 ├── wordlist.txt                       # Provided wordlist
@@ -20,14 +26,17 @@ edureka_cybersecurity_capstone_project/
 │   ├── vulnerability_assessment.sh   # Vulnerability scanning
 │   ├── exploitation.sh               # Ethical exploitation
 │   └── documentation.sh             # Report generation
-└── reports/                           # Generated reports
-    ├── final_penetration_test_report_20251025_220200.txt
-    ├── executive_summary_20251025_220200.txt
-    ├── vulnerability_database_20251025_220200.csv
-    ├── remediation_guide_20251025_220200.txt
-    ├── reconnaissance_report_20251025_220128.txt
-    ├── vulnerability_assessment_20251025_220200.txt
-    └── exploitation_report_20251025_220200.txt
+├── reports/                           # Generated reports
+│   ├── final_penetration_test_report_20251025_220200.txt
+│   ├── executive_summary_20251025_220200.txt
+│   ├── vulnerability_database_20251025_220200.csv
+│   ├── remediation_guide_20251025_220200.txt
+│   ├── reconnaissance_report_20251025_220128.txt
+│   ├── vulnerability_assessment_20251025_220200.txt
+│   └── exploitation_report_20251025_220200.txt
+└── docker/                            # Docker configuration files
+    ├── nginx.conf                     # Nginx configuration
+    └── init.sql                       # Database initialization
 ```
 
 ## Quick Start
@@ -115,6 +124,27 @@ run_assessment.bat
 - Curl: Manual testing and verification
 - WhatWeb: Web technology detection
 - SSLScan: SSL/TLS configuration testing
+
+## Docker Support
+
+This project includes full Docker support for containerized penetration testing:
+
+- 🐳 **Dockerfile** - Complete penetration testing environment
+- 🔧 **Docker Compose** - Multi-service setup with database and web server
+- 📊 **Report Server** - Web interface for viewing assessment reports
+- 🗄️ **Database Integration** - PostgreSQL for storing results
+- ⚡ **Management Script** - Easy Docker operations
+
+### Quick Docker Start
+```bash
+# Build and start services
+./docker-manage.sh build && ./docker-manage.sh start
+
+# Run assessment
+./docker-manage.sh run
+
+# View reports at http://localhost:8080
+```
 
 ## CI/CD Pipeline
 
