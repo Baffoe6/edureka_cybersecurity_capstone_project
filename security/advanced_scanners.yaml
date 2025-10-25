@@ -1,0 +1,56 @@
+# Advanced Security Scanning Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: advanced-security-config
+  namespace: cybersecurity-capstone
+data:
+  # OWASP ZAP Configuration
+  zap-config.yaml: |
+    zap:
+      activeScan: true
+      spider: true
+      ajaxSpider: true
+      context: "ecommerce-target"
+      policies:
+        - "OWASP Top 10"
+        - "SQL Injection"
+        - "XSS"
+        - "CSRF"
+        - "Directory Traversal"
+  
+  # Burp Suite Configuration
+  burp-config.json: |
+    {
+      "target": "http://target:80",
+      "scope": ["http://target:80/*"],
+      "scanTypes": [
+        "SQL Injection",
+        "XSS",
+        "CSRF",
+        "Directory Traversal",
+        "Command Injection",
+        "File Upload",
+        "Authentication Bypass"
+      ],
+      "crawlDepth": 5,
+      "maxRequests": 10000
+    }
+  
+  # Nuclei Templates
+  nuclei-config.yaml: |
+    templates:
+      - "cves/"
+      - "exposures/"
+      - "vulnerabilities/"
+      - "misconfiguration/"
+      - "technologies/"
+    severity:
+      - "critical"
+      - "high"
+      - "medium"
+      - "low"
+    tags:
+      - "owasp-top10"
+      - "ecommerce"
+      - "web"

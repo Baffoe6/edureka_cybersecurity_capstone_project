@@ -1,0 +1,113 @@
+# Compliance Framework Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: compliance-config
+  namespace: cybersecurity-capstone
+data:
+  # SOC 2 Compliance Configuration
+  soc2-config.yaml: |
+    controls:
+      CC6.1: "Logical and Physical Access Controls"
+      CC6.2: "Prior to Issuing System Credentials"
+      CC6.3: "Access to Data"
+      CC6.4: "Restriction of Access to Information Assets"
+      CC6.5: "Protection Against Malicious Software"
+      CC6.6: "Transmission of Data"
+      CC6.7: "Data Retention and Disposal"
+      CC6.8: "Change Management"
+      CC7.1: "System Monitoring"
+      CC7.2: "System Monitoring Tools"
+      CC7.3: "System Monitoring Data"
+      CC7.4: "System Monitoring Analysis"
+      CC7.5: "System Monitoring Response"
+      CC8.1: "Change Management Process"
+      CC8.2: "System Changes"
+      CC8.3: "Emergency Changes"
+      CC8.4: "Documentation of Changes"
+      CC8.5: "Change Management Controls"
+      CC9.1: "Risk Assessment Process"
+      CC9.2: "Risk Assessment Scope"
+      CC9.3: "Risk Assessment Frequency"
+      CC9.4: "Risk Assessment Documentation"
+      CC9.5: "Risk Assessment Updates"
+  
+  # GDPR Compliance Configuration
+  gdpr-config.yaml: |
+    data_protection:
+      personal_data_handling:
+        - "Data Minimization"
+        - "Purpose Limitation"
+        - "Storage Limitation"
+        - "Accuracy"
+        - "Confidentiality"
+        - "Integrity"
+        - "Availability"
+      
+      rights_of_data_subjects:
+        - "Right to Access"
+        - "Right to Rectification"
+        - "Right to Erasure"
+        - "Right to Restrict Processing"
+        - "Right to Data Portability"
+        - "Right to Object"
+        - "Rights Related to Automated Decision Making"
+      
+      technical_measures:
+        - "Encryption at Rest"
+        - "Encryption in Transit"
+        - "Access Controls"
+        - "Audit Logging"
+        - "Data Anonymization"
+        - "Pseudonymization"
+  
+  # PCI-DSS Compliance Configuration
+  pci-dss-config.yaml: |
+    requirements:
+      "1": "Install and maintain a firewall configuration"
+      "2": "Do not use vendor-supplied defaults"
+      "3": "Protect stored cardholder data"
+      "4": "Encrypt transmission of cardholder data"
+      "5": "Use and regularly update anti-virus software"
+      "6": "Develop and maintain secure systems"
+      "7": "Restrict access by business need-to-know"
+      "8": "Assign a unique ID to each person"
+      "9": "Restrict physical access to cardholder data"
+      "10": "Track and monitor all access"
+      "11": "Regularly test security systems"
+      "12": "Maintain a policy that addresses information security"
+  
+  # NIST Cybersecurity Framework
+  nist-config.yaml: |
+    framework:
+      identify:
+        - "Asset Management"
+        - "Business Environment"
+        - "Governance"
+        - "Risk Assessment"
+        - "Risk Management Strategy"
+      
+      protect:
+        - "Identity Management"
+        - "Protective Technology"
+        - "Awareness and Training"
+        - "Data Security"
+        - "Information Protection"
+        - "Maintenance"
+      
+      detect:
+        - "Anomalies and Events"
+        - "Security Continuous Monitoring"
+        - "Detection Processes"
+      
+      respond:
+        - "Response Planning"
+        - "Communications"
+        - "Analysis"
+        - "Mitigation"
+        - "Improvements"
+      
+      recover:
+        - "Recovery Planning"
+        - "Improvements"
+        - "Communications"

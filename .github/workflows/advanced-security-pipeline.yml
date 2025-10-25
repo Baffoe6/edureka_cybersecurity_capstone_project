@@ -1,0 +1,302 @@
+name: Advanced Security Pipeline with Gates
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 2 * * *'  # Daily security scan at 2 AM
+
+env:
+  SECURITY_SCAN_TIMEOUT: 1800
+  VULNERABILITY_THRESHOLD: 5
+  CRITICAL_THRESHOLD: 1
+
+jobs:
+  security-gates:
+    name: Security Gates & Quality Gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Setup Security Tools
+      run: |
+        # Install security scanning tools
+        sudo apt-get update
+        sudo apt-get install -y nmap nikto dirb gobuster hydra sqlmap
+        
+        # Install container security tools
+        wget https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.45.0_Linux-64bit.tar.gz
+        tar -xzf trivy_0.45.0_Linux-64bit.tar.gz
+        sudo mv trivy /usr/local/bin/
+        
+        # Install SAST tools
+        pip install bandit safety semgrep
+        
+        # Install dependency scanners
+        npm install -g audit-ci retire
+        
+        # Install infrastructure scanning
+        wget https://releases.hashicorp.com/terraform/1.6.0/terraform_1.6.0_linux_amd64.zip
+        unzip terraform_1.6.0_linux_amd64.zip
+        sudo mv terraform /usr/local/bin/
+        
+        # Install infrastructure security scanner
+        wget https://github.com/aquasecurity/tfsec/releases/latest/download/tfsec-linux-amd64
+        chmod +x tfsec-linux-amd64
+        sudo mv tfsec-linux-amd64 /usr/local/bin/tfsec
+    
+    - name: SAST - Static Application Security Testing
+      run: |
+        echo "🔍 Running Static Application Security Testing..."
+        
+        # Python security analysis
+        bandit -r . -f json -o bandit-report.json || true
+        
+        # Dependency vulnerability scanning
+        safety check --json --output safety-report.json || true
+        
+        # Semgrep analysis
+        semgrep --config=auto --json --output=semgrep-report.json . || true
+        
+        # Generate SAST summary
+        echo "SAST Analysis Complete" > sast-summary.txt
+        echo "Bandit: $(jq '.results | length' bandit-report.json) issues found" >> sast-summary.txt
+        echo "Safety: $(jq '.vulnerabilities | length' safety-report.json) vulnerabilities found" >> sast-summary.txt
+        echo "Semgrep: $(jq '.results | length' semgrep-report.json) findings" >> sast-summary.txt
+    
+    - name: DAST - Dynamic Application Security Testing
+      run: |
+        echo "🌐 Running Dynamic Application Security Testing..."
+        
+        # Load target configuration
+        source target_info.txt
+        
+        # OWASP ZAP scanning
+        docker run -t owasp/zap2docker-stable zap-baseline.py -t http://$TARGET_IP -J zap-report.json || true
+        
+        # Nikto web vulnerability scanning
+        nikto -h http://$TARGET_IP -Format json -output nikto-report.json || true
+        
+        # Nuclei vulnerability scanning
+        docker run -v $(pwd):/tmp nuclei -u http://$TARGET_IP -json -o /tmp/nuclei-report.json || true
+        
+        # Generate DAST summary
+        echo "DAST Analysis Complete" > dast-summary.txt
+        echo "ZAP: $(jq '.site | length' zap-report.json) sites scanned" >> dast-summary.txt
+        echo "Nikto: $(jq '.vulnerabilities | length' nikto-report.json) vulnerabilities found" >> dast-summary.txt
+        echo "Nuclei: $(jq '.info | length' nuclei-report.json) findings" >> dast-summary.txt
+    
+    - name: Container Security Scanning
+      run: |
+        echo "🐳 Running Container Security Scanning..."
+        
+        # Build Docker image for scanning
+        docker build -t cybersecurity-capstone:latest .
+        
+        # Trivy container scanning
+        trivy image --format json --output trivy-container-report.json cybersecurity-capstone:latest || true
+        
+        # Docker Scout scanning
+        docker scout cves --format json --output docker-scout-report.json cybersecurity-capstone:latest || true
+        
+        # Generate container security summary
+        echo "Container Security Analysis Complete" > container-summary.txt
+        echo "Trivy: $(jq '.Results | length' trivy-container-report.json) vulnerabilities found" >> container-summary.txt
+        echo "Docker Scout: $(jq '.vulnerabilities | length' docker-scout-report.json) CVEs found" >> container-summary.txt
+    
+    - name: Infrastructure Security Scanning
+      run: |
+        echo "🏗️ Running Infrastructure Security Scanning..."
+        
+        # Terraform security scanning
+        tfsec --format json --out tfsec-report.json terraform/ || true
+        
+        # Checkov infrastructure scanning
+        checkov -d terraform/ --framework terraform --output json --output-file-path checkov-report.json || true
+        
+        # Generate infrastructure security summary
+        echo "Infrastructure Security Analysis Complete" > infrastructure-summary.txt
+        echo "TFSec: $(jq '.results | length' tfsec-report.json) issues found" >> infrastructure-summary.txt
+        echo "Checkov: $(jq '.results | length' checkov-report.json) findings" >> infrastructure-summary.txt
+    
+    - name: Dependency Security Scanning
+      run: |
+        echo "📦 Running Dependency Security Scanning..."
+        
+        # Node.js dependency scanning
+        npm audit --json > npm-audit-report.json || true
+        
+        # Python dependency scanning
+        pip-audit --format=json --output=pip-audit-report.json || true
+        
+        # Retire.js scanning
+        retire --outputformat json --outputpath retire-report.json || true
+        
+        # Generate dependency security summary
+        echo "Dependency Security Analysis Complete" > dependency-summary.txt
+        echo "NPM Audit: $(jq '.vulnerabilities | length' npm-audit-report.json) vulnerabilities found" >> dependency-summary.txt
+        echo "Pip Audit: $(jq '.vulnerabilities | length' pip-audit-report.json) issues found" >> dependency-summary.txt
+        echo "Retire.js: $(jq '.data | length' retire-report.json) vulnerable components found" >> dependency-summary.txt
+    
+    - name: Security Gate Evaluation
+      run: |
+        echo "🚪 Evaluating Security Gates..."
+        
+        # Count critical vulnerabilities
+        CRITICAL_COUNT=0
+        HIGH_COUNT=0
+        MEDIUM_COUNT=0
+        LOW_COUNT=0
+        
+        # Parse Trivy results
+        if [ -f trivy-container-report.json ]; then
+          CRITICAL_COUNT=$((CRITICAL_COUNT + $(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL")] | length' trivy-container-report.json)))
+          HIGH_COUNT=$((HIGH_COUNT + $(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "HIGH")] | length' trivy-container-report.json)))
+          MEDIUM_COUNT=$((MEDIUM_COUNT + $(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "MEDIUM")] | length' trivy-container-report.json)))
+          LOW_COUNT=$((LOW_COUNT + $(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "LOW")] | length' trivy-container-report.json)))
+        fi
+        
+        # Parse Bandit results
+        if [ -f bandit-report.json ]; then
+          HIGH_COUNT=$((HIGH_COUNT + $(jq '[.results[] | select(.issue_severity == "HIGH")] | length' bandit-report.json)))
+          MEDIUM_COUNT=$((MEDIUM_COUNT + $(jq '[.results[] | select(.issue_severity == "MEDIUM")] | length' bandit-report.json)))
+          LOW_COUNT=$((LOW_COUNT + $(jq '[.results[] | select(.issue_severity == "LOW")] | length' bandit-report.json)))
+        fi
+        
+        # Security gate evaluation
+        echo "Security Gate Evaluation Results:" > security-gate-results.txt
+        echo "Critical Vulnerabilities: $CRITICAL_COUNT" >> security-gate-results.txt
+        echo "High Vulnerabilities: $HIGH_COUNT" >> security-gate-results.txt
+        echo "Medium Vulnerabilities: $MEDIUM_COUNT" >> security-gate-results.txt
+        echo "Low Vulnerabilities: $LOW_COUNT" >> security-gate-results.txt
+        
+        # Determine if security gates pass
+        if [ $CRITICAL_COUNT -gt $CRITICAL_THRESHOLD ]; then
+          echo "❌ SECURITY GATE FAILED: Critical vulnerabilities exceed threshold ($CRITICAL_COUNT > $CRITICAL_THRESHOLD)"
+          echo "GATE_STATUS: FAILED" >> security-gate-results.txt
+          exit 1
+        elif [ $HIGH_COUNT -gt $VULNERABILITY_THRESHOLD ]; then
+          echo "⚠️ SECURITY GATE WARNING: High vulnerabilities exceed threshold ($HIGH_COUNT > $VULNERABILITY_THRESHOLD)"
+          echo "GATE_STATUS: WARNING" >> security-gate-results.txt
+        else
+          echo "✅ SECURITY GATE PASSED: All security thresholds met"
+          echo "GATE_STATUS: PASSED" >> security-gate-results.txt
+        fi
+    
+    - name: Generate Security Report
+      run: |
+        echo "📊 Generating Comprehensive Security Report..."
+        
+        # Create comprehensive security report
+        cat > security-report.md << EOF
+        # Security Assessment Report
+        
+        **Date:** $(date)
+        **Pipeline:** ${{ github.workflow }}
+        **Commit:** ${{ github.sha }}
+        **Branch:** ${{ github.ref_name }}
+        
+        ## Executive Summary
+        
+        This report summarizes the security assessment conducted as part of the CI/CD pipeline.
+        
+        ## Security Gate Results
+        
+        \`\`\`
+        $(cat security-gate-results.txt)
+        \`\`\`
+        
+        ## SAST Results
+        
+        \`\`\`
+        $(cat sast-summary.txt)
+        \`\`\`
+        
+        ## DAST Results
+        
+        \`\`\`
+        $(cat dast-summary.txt)
+        \`\`\`
+        
+        ## Container Security Results
+        
+        \`\`\`
+        $(cat container-summary.txt)
+        \`\`\`
+        
+        ## Infrastructure Security Results
+        
+        \`\`\`
+        $(cat infrastructure-summary.txt)
+        \`\`\`
+        
+        ## Dependency Security Results
+        
+        \`\`\`
+        $(cat dependency-summary.txt)
+        \`\`\`
+        
+        ## Recommendations
+        
+        1. Address all critical vulnerabilities immediately
+        2. Review and remediate high-severity issues
+        3. Implement automated security scanning in CI/CD
+        4. Establish security training for development team
+        5. Regular security assessments and penetration testing
+        
+        ## Next Steps
+        
+        1. Remediate identified vulnerabilities
+        2. Update security policies and procedures
+        3. Implement additional security controls
+        4. Schedule follow-up security assessment
+        EOF
+    
+    - name: Upload Security Reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-reports-${{ github.run_number }}
+        path: |
+          security-report.md
+          security-gate-results.txt
+          sast-summary.txt
+          dast-summary.txt
+          container-summary.txt
+          infrastructure-summary.txt
+          dependency-summary.txt
+          *.json
+        retention-days: 30
+    
+    - name: Notify Security Team
+      if: failure()
+      run: |
+        echo "🚨 Security gate failed! Notifying security team..."
+        # In a real implementation, this would send notifications via:
+        # - Slack webhook
+        # - Email
+        # - PagerDuty
+        # - Microsoft Teams
+        echo "Security team notification sent"
+    
+    - name: Comment on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const report = fs.readFileSync('security-report.md', 'utf8');
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `## 🔒 Security Assessment Results\n\n${report}`
+          });
