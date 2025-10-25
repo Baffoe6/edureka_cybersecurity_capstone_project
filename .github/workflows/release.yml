@@ -1,0 +1,160 @@
+name: Release and Deployment
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Type of release'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+        - patch
+        - minor
+        - major
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Validate release
+      run: |
+        echo "Validating release requirements..."
+        
+        # Check if all required files exist
+        required_files=("README.md" "scripts/setup.sh" "scripts/reconnaissance.sh" "scripts/vulnerability_assessment.sh" "scripts/exploitation.sh" "scripts/documentation.sh")
+        
+        for file in "${required_files[@]}"; do
+          if [ -f "$file" ]; then
+            echo "✅ $file exists"
+          else
+            echo "❌ $file missing"
+            exit 1
+          fi
+        done
+        
+        # Check script permissions
+        for script in scripts/*.sh; do
+          if [ -f "$script" ]; then
+            chmod +x "$script"
+            echo "✅ $script permissions set"
+          fi
+        done
+        
+    - name: Generate release notes
+      run: |
+        echo "Generating release notes..."
+        cat > RELEASE_NOTES.md << EOF
+        # Cybersecurity Capstone Project Release Notes
+        
+        **Version:** ${{ github.ref_name }}
+        **Release Date:** $(date)
+        
+        ## What's New
+        - ✅ Complete penetration testing framework
+        - ✅ Automated CI/CD pipeline
+        - ✅ Professional documentation
+        - ✅ Security assessment tools
+        
+        ## Features
+        - **5 Automated Scripts:** Complete penetration testing workflow
+        - **Professional Reports:** Management and technical documentation
+        - **CI/CD Pipeline:** Automated testing and validation
+        - **Security Tools:** Nmap, Nikto, SQLMap, Hydra integration
+        
+        ## Assessment Results
+        - 14 vulnerabilities identified
+        - 3 critical vulnerabilities
+        - 5 high-risk vulnerabilities
+        - Complete remediation guide
+        
+        ## Installation
+        1. Clone the repository
+        2. Import the OVA file into VirtualBox/VMware
+        3. Configure target information
+        4. Run assessment scripts
+        
+        ## Usage
+        \`\`\`bash
+        # Windows
+        run_assessment.bat
+        
+        # Linux/Mac
+        ./run_assessment.sh
+        \`\`\`
+        
+        ## Security Notice
+        This project is for educational purposes only. Always ensure you have proper authorization before testing any systems.
+        
+        EOF
+        
+    - name: Create release package
+      run: |
+        echo "Creating release package..."
+        mkdir -p release_package
+        
+        # Copy essential files
+        cp README.md release_package/
+        cp run_assessment.sh release_package/
+        cp run_assessment.bat release_package/
+        cp target_info.txt release_package/
+        cp wordlist.txt release_package/
+        cp filelist.txt release_package/
+        cp .gitignore release_package/
+        
+        # Copy scripts directory
+        cp -r scripts release_package/
+        
+        # Copy reports directory
+        cp -r reports release_package/
+        
+        # Create installation script
+        cat > release_package/install.sh << 'EOF'
+        #!/bin/bash
+        echo "Installing Cybersecurity Capstone Project..."
+        echo "Setting up permissions..."
+        chmod +x scripts/*.sh
+        chmod +x run_assessment.sh
+        echo "Installation complete!"
+        echo "Next steps:"
+        echo "1. Import js_6rk_wd58kli.ova into VirtualBox/VMware"
+        echo "2. Edit target_info.txt with your target IP"
+        echo "3. Run: ./run_assessment.sh"
+        EOF
+        
+        chmod +x release_package/install.sh
+        
+        # Create zip package
+        zip -r cybersecurity_capstone_project_${{ github.ref_name }}.zip release_package/
+        
+    - name: Upload release artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: release-package-${{ github.ref_name }}
+        path: |
+          cybersecurity_capstone_project_${{ github.ref_name }}.zip
+          RELEASE_NOTES.md
+          
+    - name: Create GitHub Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref_name }}
+        release_name: Cybersecurity Capstone Project ${{ github.ref_name }}
+        body_path: RELEASE_NOTES.md
+        draft: false
+        prerelease: false

@@ -116,6 +116,29 @@ run_assessment.bat
 - WhatWeb: Web technology detection
 - SSLScan: SSL/TLS configuration testing
 
+## CI/CD Pipeline
+
+This project includes a comprehensive CI/CD pipeline with GitHub Actions:
+
+- 🔒 **Security Testing Pipeline** - Automated security tool validation and testing
+- 📊 **Code Quality Pipeline** - Code quality checks and documentation validation  
+- 🤖 **Automated Assessment** - Scheduled security assessments and reporting
+- 🚀 **Release Pipeline** - Automated release management and packaging
+
+### Pipeline Features
+- ✅ Automated security tool installation and validation
+- ✅ Script syntax and permission checks
+- ✅ Documentation quality validation
+- ✅ Scheduled security assessments
+- ✅ Automated release package generation
+- ✅ PR security status comments
+
+### Status Badges
+![Security Testing](https://github.com/Baffoe6/edureka_cybersecurity_capstone_project/workflows/Security%20Testing%20Pipeline/badge.svg)
+![Code Quality](https://github.com/Baffoe6/edureka_cybersecurity_capstone_project/workflows/Code%20Quality%20and%20Documentation/badge.svg)
+![Automated Assessment](https://github.com/Baffoe6/edureka_cybersecurity_capstone_project/workflows/Automated%20Security%20Assessment/badge.svg)
+![Release](https://github.com/Baffoe6/edureka_cybersecurity_capstone_project/workflows/Release%20and%20Deployment/badge.svg)
+
 ## Legal and Ethical Considerations
 - This project is for educational purposes only
 - Testing is performed on authorized systems only
