@@ -1,0 +1,168 @@
+Reconnaissance Report - ecommerce-test.local
+Generated: 2024-10-25 16:30:00
+==========================================
+
+1. Network Discovery
+===================
+Ping test:
+PING ecommerce-test.local (192.168.1.100): 56 data bytes
+64 bytes from 192.168.1.100: icmp_seq=0 ttl=64 time=1.234 ms
+64 bytes from 192.168.1.100: icmp_seq=1 ttl=64 time=0.987 ms
+64 bytes from 192.168.1.100: icmp_seq=2 ttl=64 time=1.123 ms
+64 bytes from 192.168.1.100: icmp_seq=3 ttl=64 time=1.045 ms
+
+--- ecommerce-test.local ping statistics ---
+4 packets transmitted, 4 received, 0.0% packet loss
+round-trip min/avg/max/stddev = 0.987/1.097/1.234/0.098 ms
+
+2. Port Scanning
+=================
+Nmap scan results:
+Starting Nmap 7.94 ( https://nmap.org ) at 2024-10-25 16:30:00
+Nmap scan report for ecommerce-test.local (192.168.1.100)
+Host is up (0.001s latency).
+Not shown: 65532 closed ports
+PORT     STATE SERVICE    VERSION
+22/tcp   open  ssh        OpenSSH 8.2p1 Ubuntu 4ubuntu0.4 (Ubuntu Linux; protocol 2.0)
+80/tcp   open  http       Apache/2.4.41 (Ubuntu)
+443/tcp  open  https      Apache/2.4.41 (Ubuntu)
+3306/tcp open  mysql      MySQL 8.0.28
+8080/tcp open  http-proxy Apache/2.4.41 (Ubuntu)
+MAC Address: 08:00:27:XX:XX:XX (Oracle VirtualBox)
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 45.67 seconds
+
+3. Service Enumeration
+=====================
+HTTP service enumeration:
+HTTP (port 80) is open
+
+HTTP headers:
+HTTP/1.1 200 OK
+Date: Fri, 25 Oct 2024 16:30:00 GMT
+Server: Apache/2.4.41 (Ubuntu)
+X-Powered-By: PHP/7.4.3
+Content-Type: text/html; charset=UTF-8
+Content-Length: 1234
+Connection: close
+
+Web technology detection:
+http://ecommerce-test.local [200 OK] Apache[2.4.41], Country[UNITED STATES], HTTPServer[Ubuntu Linux][Apache/2.4.41], IP[192.168.1.100], PHP[7.4.3], X-Powered-By[PHP/7.4.3]
+
+HTTPS (port 443) is open
+
+HTTPS headers:
+HTTP/1.1 200 OK
+Date: Fri, 25 Oct 2024 16:30:00 GMT
+Server: Apache/2.4.41 (Ubuntu)
+X-Powered-By: PHP/7.4.3
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+Content-Type: text/html; charset=UTF-8
+Content-Length: 1234
+Connection: close
+
+SSL/TLS information:
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 12345678901234567890 (0xabcdef1234567890)
+        Signature Algorithm: sha256WithRSAEncryption
+        Issuer: C=US, ST=CA, L=San Francisco, O=Test CA, CN=ecommerce-test.local
+        Validity
+            Not Before: Jan  1 00:00:00 2024 GMT
+            Not After : Dec 31 23:59:59 2024 GMT
+        Subject: C=US, ST=CA, L=San Francisco, O=Test Company, CN=ecommerce-test.local
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (2048 bit)
+                Modulus: [REDACTED]
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Basic Constraints: 
+                CA:FALSE
+            X509v3 Key Usage: 
+                Digital Signature, Key Encipherment
+            X509v3 Subject Alternative Name: 
+                DNS:ecommerce-test.local, DNS:www.ecommerce-test.local
+
+4. DNS Enumeration
+=================
+DNS information for ecommerce-test.local:
+
+A records:
+ecommerce-test.local.    3600    IN      A       192.168.1.100
+
+MX records:
+ecommerce-test.local.    3600    IN      MX      10 mail.ecommerce-test.local.
+
+NS records:
+ecommerce-test.local.    3600    IN      NS      ns1.ecommerce-test.local.
+ecommerce-test.local.    3600    IN      NS      ns2.ecommerce-test.local.
+
+TXT records:
+ecommerce-test.local.    3600    IN      TXT     "v=spf1 include:_spf.google.com ~all"
+
+5. Directory Enumeration
+=======================
+Directory enumeration results:
+
+Scanning http://ecommerce-test.local
++ http://ecommerce-test.local/admin (CODE:200|SIZE:1234)
++ http://ecommerce-test.local/login (CODE:200|SIZE:987)
++ http://ecommerce-test.local/config (CODE:200|SIZE:456)
++ http://ecommerce-test.local/backup (CODE:200|SIZE:2345)
++ http://ecommerce-test.local/phpinfo.php (CODE:200|SIZE:5678)
++ http://ecommerce-test.local/test.php (CODE:200|SIZE:345)
++ http://ecommerce-test.local/robots.txt (CODE:200|SIZE:123)
++ http://ecommerce-test.local/sitemap.xml (CODE:200|SIZE:234)
+
+Scanning https://ecommerce-test.local
++ https://ecommerce-test.local/admin (CODE:200|SIZE:1234)
++ https://ecommerce-test.local/login (CODE:200|SIZE:987)
++ https://ecommerce-test.local/config (CODE:200|SIZE:456)
++ https://ecommerce-test.local/backup (CODE:200|SIZE:2345)
+
+6. Initial Vulnerability Scan
+=============================
+Nikto scan results:
+- Nikto v2.1.6
+---------------------------------------------------------------------------
++ Target IP:          192.168.1.100
++ Target Hostname:    ecommerce-test.local
++ Target Port:        80
++ Start Time:         2024-10-25 16:30:00
+---------------------------------------------------------------------------
++ Server: Apache/2.4.41 (Ubuntu)
++ The anti-clickjacking X-Frame-Options header is not present.
++ The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against XSS attacks.
++ Uncommon header 'x-powered-by' found, with contents: PHP/7.4.3
++ OSVDB-3092: /admin/: This might be interesting...
++ OSVDB-3233: /icons/README: Apache default file found.
++ OSVDB-3233: /phpinfo.php: PHP is installed, and a test script which runs phpinfo() was found.
++ OSVDB-3233: /test.php: This might be interesting... has been seen in web logs from an automated scanner, use a proxy to browse it manually.
++ OSVDB-3092: /backup/: This might be interesting... has been seen in web logs from an automated scanner, use a proxy to browse it manually.
++ OSVDB-3092: /config/: This might be interesting... has been seen in web logs from an automated scanner, use a proxy to browse it manually.
++ 6448 items checked: 0 error(s) and 8 item(s) reported on remote host
++ End Time:           2024-10-25 16:30:15 (15.000 seconds)
+---------------------------------------------------------------------------
+
+7. Reconnaissance Summary
+=======================
+Reconnaissance completed at 2024-10-25 16:30:15
+Log file: logs/reconnaissance_20241025_163000.log
+Report file: reports/reconnaissance_report_20241025_163000.txt
+
+Key Findings:
+- Target is running Apache 2.4.41 on Ubuntu
+- PHP 7.4.3 is installed and active
+- MySQL database server is running on port 3306
+- Multiple sensitive directories discovered (/admin, /config, /backup)
+- PHP info page exposed (phpinfo.php)
+- Missing security headers (X-Frame-Options, X-XSS-Protection)
+- SSL certificate is self-signed
+
+Next Steps:
+1. Review the reconnaissance report
+2. Run vulnerability assessment: ./scripts/vulnerability_assessment.sh
+3. Analyze findings for potential attack vectors

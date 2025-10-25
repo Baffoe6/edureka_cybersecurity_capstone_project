@@ -1,0 +1,28 @@
+# Target Information Template
+# Fill in the details of your target e-commerce website
+
+# Target IP Address (if known)
+TARGET_IP=192.168.1.100
+
+# Target Domain Name (if known)
+TARGET_DOMAIN=ecommerce-test.local
+
+# Target Ports (comma-separated)
+TARGET_PORT=80,443
+
+# Target Operating System (if known)
+TARGET_OS=
+
+# Target Services (if known)
+TARGET_SERVICES=
+
+# Additional Notes
+# Add any specific information about the target here
+# Example: Known usernames, specific vulnerabilities to test, etc.
+
+# Instructions:
+# 1. Import the OVA file (js_6rk_wd58kli.ova) into VirtualBox or VMware
+# 2. Start the virtual machine
+# 3. Note the IP address assigned to the machine
+# 4. Fill in the TARGET_IP or TARGET_DOMAIN above
+# 5. Save this file and run the assessment scripts

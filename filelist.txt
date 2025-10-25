@@ -1,0 +1,17 @@
+index.html
+index.php
+index.asp
+index.jsp
+index.py
+index.cgi
+login.html
+login.php
+admin.html
+admin.php
+config.php
+config.ini
+config.xml
+robots.txt
+sitemap.xml
+crossdomain.xml
+favicon.ico
