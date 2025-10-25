@@ -1,5 +1,5 @@
 Reconnaissance Report - ecommerce-test.local
-Generated: 2024-10-25 16:30:00
+Generated: 2025-10-25 22:01:28
 ==========================================
 
 1. Network Discovery
@@ -149,9 +149,9 @@ Nikto scan results:
 
 7. Reconnaissance Summary
 =======================
-Reconnaissance completed at 2024-10-25 16:30:15
-Log file: logs/reconnaissance_20241025_163000.log
-Report file: reports/reconnaissance_report_20241025_163000.txt
+Reconnaissance completed at 2025-10-25 22:01:28
+Log file: logs/reconnaissance_20251025_220128.log
+Report file: reports/reconnaissance_report_20251025_220128.txt
 
 Key Findings:
 - Target is running Apache 2.4.41 on Ubuntu

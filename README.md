@@ -21,13 +21,13 @@ edureka_cybersecurity_capstone_project/
 │   ├── exploitation.sh               # Ethical exploitation
 │   └── documentation.sh             # Report generation
 └── reports/                           # Generated reports
-    ├── final_penetration_test_report_20241025_164500.txt
-    ├── executive_summary_20241025_164500.txt
-    ├── vulnerability_database_20241025_164500.csv
-    ├── remediation_guide_20241025_164500.txt
-    ├── reconnaissance_report_20241025_163000.txt
-    ├── vulnerability_assessment_20241025_163500.txt
-    └── exploitation_report_20241025_164000.txt
+    ├── final_penetration_test_report_20251025_220200.txt
+    ├── executive_summary_20251025_220200.txt
+    ├── vulnerability_database_20251025_220200.csv
+    ├── remediation_guide_20251025_220200.txt
+    ├── reconnaissance_report_20251025_220128.txt
+    ├── vulnerability_assessment_20251025_220200.txt
+    └── exploitation_report_20251025_220200.txt
 ```
 
 ## Quick Start
