@@ -1,0 +1,135 @@
+# Jenkins Pipeline for CI/CD
+pipeline {
+    agent any
+    
+    environment {
+        DOCKER_REGISTRY = 'your-registry.com'
+        IMAGE_NAME = 'cybersecurity-capstone'
+        KUBECONFIG = credentials('kubeconfig')
+        HELM_REPO = 'https://charts.yourdomain.com'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    def image = docker.build("${DOCKER_REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}")
+                    docker.withRegistry("https://${DOCKER_REGISTRY}", 'docker-registry-credentials') {
+                        image.push()
+                        image.push('latest')
+                    }
+                }
+            }
+        }
+        
+        stage('Security Scan') {
+            parallel {
+                stage('Trivy Scan') {
+                    steps {
+                        sh 'trivy image --exit-code 1 --severity HIGH,CRITICAL ${DOCKER_REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}'
+                    }
+                }
+                stage('Snyk Scan') {
+                    steps {
+                        sh 'snyk container test ${DOCKER_REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER} --severity-threshold=high'
+                    }
+                }
+            }
+        }
+        
+        stage('Unit Tests') {
+            steps {
+                sh 'docker run --rm ${DOCKER_REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER} python -m pytest tests/'
+            }
+        }
+        
+        stage('Integration Tests') {
+            steps {
+                sh 'docker-compose -f docker-compose.test.yml up --abort-on-container-exit'
+            }
+        }
+        
+        stage('Deploy to Staging') {
+            when {
+                branch 'develop'
+            }
+            steps {
+                sh '''
+                    helm upgrade --install cybersecurity-capstone-staging \
+                        ./helm/cybersecurity-capstone \
+                        --namespace cybersecurity-capstone-staging \
+                        --create-namespace \
+                        --set image.tag=${BUILD_NUMBER} \
+                        --set ingress.hosts[0].host=staging-pentest.yourdomain.com
+                '''
+            }
+        }
+        
+        stage('Deploy to Production') {
+            when {
+                branch 'main'
+            }
+            steps {
+                input message: 'Deploy to production?', ok: 'Deploy'
+                sh '''
+                    helm upgrade --install cybersecurity-capstone \
+                        ./helm/cybersecurity-capstone \
+                        --namespace cybersecurity-capstone \
+                        --create-namespace \
+                        --set image.tag=${BUILD_NUMBER} \
+                        --set ingress.hosts[0].host=pentest.yourdomain.com
+                '''
+            }
+        }
+        
+        stage('Run Security Assessment') {
+            steps {
+                sh '''
+                    kubectl create job --from=cronjob/scheduled-assessment \
+                        manual-assessment-${BUILD_NUMBER} \
+                        -n cybersecurity-capstone
+                '''
+            }
+        }
+        
+        stage('Generate Report') {
+            steps {
+                sh '''
+                    kubectl wait --for=condition=complete \
+                        job/manual-assessment-${BUILD_NUMBER} \
+                        -n cybersecurity-capstone --timeout=300s
+                '''
+                publishHTML([
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: true,
+                    keepAll: true,
+                    reportDir: 'reports',
+                    reportFiles: '*.html',
+                    reportName: 'Security Assessment Report'
+                ])
+            }
+        }
+    }
+    
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            slackSend channel: '#security',
+                      color: 'good',
+                      message: "✅ Security assessment completed successfully! Build: ${BUILD_NUMBER}"
+        }
+        failure {
+            slackSend channel: '#security',
+                      color: 'danger',
+                      message: "❌ Security assessment failed! Build: ${BUILD_NUMBER}"
+        }
+    }
+}

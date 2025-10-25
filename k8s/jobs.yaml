@@ -1,0 +1,113 @@
+# CronJob for Scheduled Security Assessments
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: scheduled-assessment
+  namespace: cybersecurity-capstone
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: assessment-runner
+            image: cybersecurity-capstone:latest
+            command:
+            - /bin/bash
+            - -c
+            - |
+              echo "Starting scheduled security assessment..."
+              cd /app
+              ./scripts/reconnaissance.sh
+              ./scripts/vulnerability_assessment.sh
+              ./scripts/exploitation.sh
+              ./scripts/documentation.sh
+              echo "Scheduled assessment completed"
+            env:
+            - name: TARGET_IP
+              valueFrom:
+                configMapKeyRef:
+                  name: pentest-config
+                  key: TARGET_IP
+            - name: TARGET_DOMAIN
+              valueFrom:
+                configMapKeyRef:
+                  name: pentest-config
+                  key: TARGET_DOMAIN
+            volumeMounts:
+            - name: reports-volume
+              mountPath: /app/reports
+            - name: logs-volume
+              mountPath: /app/logs
+            resources:
+              requests:
+                memory: "512Mi"
+                cpu: "250m"
+              limits:
+                memory: "2Gi"
+                cpu: "1000m"
+          volumes:
+          - name: reports-volume
+            persistentVolumeClaim:
+              claimName: reports-pvc
+          - name: logs-volume
+            persistentVolumeClaim:
+              claimName: logs-pvc
+          restartPolicy: OnFailure
+---
+# Job for One-time Assessment
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: manual-assessment
+  namespace: cybersecurity-capstone
+spec:
+  template:
+    spec:
+      containers:
+      - name: assessment-runner
+        image: cybersecurity-capstone:latest
+        command:
+        - /bin/bash
+        - -c
+        - |
+          echo "Starting manual security assessment..."
+          cd /app
+          ./run_assessment.sh
+          echo "Manual assessment completed"
+        env:
+        - name: TARGET_IP
+          valueFrom:
+            configMapKeyRef:
+              name: pentest-config
+              key: TARGET_IP
+        - name: TARGET_DOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: pentest-config
+              key: TARGET_DOMAIN
+        volumeMounts:
+        - name: reports-volume
+          mountPath: /app/reports
+        - name: logs-volume
+          mountPath: /app/logs
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+      volumes:
+      - name: reports-volume
+        persistentVolumeClaim:
+          claimName: reports-pvc
+      - name: logs-volume
+        persistentVolumeClaim:
+          claimName: logs-pvc
+      restartPolicy: Never
+  backoffLimit: 3

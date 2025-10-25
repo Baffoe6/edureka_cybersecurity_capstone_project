@@ -1,0 +1,139 @@
+# Default values for cybersecurity-capstone
+# This is a YAML-formatted file
+
+replicaCount: 2
+
+image:
+  repository: cybersecurity-capstone
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  fsGroup: 2000
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: pentest.yourdomain.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: pentest-tls
+      hosts:
+        - pentest.yourdomain.com
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Configuration
+config:
+  targetIp: "192.168.1.100"
+  targetDomain: "ecommerce-test.local"
+  logLevel: "info"
+  assessmentType: "comprehensive"
+
+# Secrets
+secrets:
+  dbPassword: "pentest_pass"
+  apiKey: "your_api_key"
+  jwtSecret: "your_jwt_secret"
+
+# Persistence
+persistence:
+  enabled: true
+  storageClass: "nfs-storage"
+  accessMode: ReadWriteMany
+  size: 10Gi
+
+# Database
+postgresql:
+  enabled: true
+  auth:
+    postgresPassword: "pentest_pass"
+    username: "pentest_user"
+    password: "pentest_pass"
+    database: "pentest_results"
+  primary:
+    persistence:
+      enabled: true
+      size: 8Gi
+
+# Redis
+redis:
+  enabled: true
+  auth:
+    enabled: false
+  master:
+    persistence:
+      enabled: true
+      size: 2Gi
+
+# Monitoring
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+  grafana:
+    enabled: true
+    adminPassword: "admin123"
+
+# Scheduled Jobs
+scheduledJobs:
+  enabled: true
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  concurrencyPolicy: Forbid
+
+# Network Policies
+networkPolicy:
+  enabled: true
+
+# Pod Disruption Budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1

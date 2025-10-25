@@ -1,0 +1,38 @@
+apiVersion: v2
+name: cybersecurity-capstone
+description: A Helm chart for Cybersecurity Capstone Project - Ethical Hacking of E-commerce Website
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - cybersecurity
+  - penetration-testing
+  - security-assessment
+  - ethical-hacking
+home: https://github.com/Baffoe6/edureka_cybersecurity_capstone_project
+sources:
+  - https://github.com/Baffoe6/edureka_cybersecurity_capstone_project
+maintainers:
+  - name: Cybersecurity Team
+    email: security@example.com
+dependencies:
+  - name: postgresql
+    version: "12.x.x"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: postgresql.enabled
+  - name: redis
+    version: "17.x.x"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: redis.enabled
+  - name: nginx-ingress
+    version: "4.x.x"
+    repository: "https://kubernetes.github.io/ingress-nginx"
+    condition: ingress.enabled
+  - name: prometheus
+    version: "25.x.x"
+    repository: "https://prometheus-community.github.io/helm-charts"
+    condition: monitoring.enabled
+  - name: grafana
+    version: "7.x.x"
+    repository: "https://grafana.github.io/helm-charts"
+    condition: monitoring.enabled

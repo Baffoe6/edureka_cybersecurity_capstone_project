@@ -1,0 +1,63 @@
+# Kubernetes Namespace for Cybersecurity Capstone Project
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cybersecurity-capstone
+  labels:
+    name: cybersecurity-capstone
+    app: penetration-testing
+    environment: production
+---
+# ConfigMap for application configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pentest-config
+  namespace: cybersecurity-capstone
+data:
+  TARGET_IP: "192.168.1.100"
+  TARGET_DOMAIN: "ecommerce-test.local"
+  LOG_LEVEL: "info"
+  ASSESSMENT_TYPE: "comprehensive"
+  REPORT_FORMAT: "html"
+---
+# Secret for sensitive data
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pentest-secrets
+  namespace: cybersecurity-capstone
+type: Opaque
+data:
+  # Base64 encoded values (change in production)
+  DB_PASSWORD: cGVudGVzdF9wYXNz  # pentest_pass
+  API_KEY: YWJjZGVmZ2hpams=      # abcdefghijk
+  JWT_SECRET: eW91cl9qd3Rfc2VjcmV0  # your_jwt_secret
+---
+# Persistent Volume Claim for reports
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: reports-pvc
+  namespace: cybersecurity-capstone
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: nfs-storage
+---
+# Persistent Volume Claim for logs
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: logs-pvc
+  namespace: cybersecurity-capstone
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: nfs-storage

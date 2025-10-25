@@ -125,6 +125,37 @@ run_assessment.bat
 - WhatWeb: Web technology detection
 - SSLScan: SSL/TLS configuration testing
 
+## Enterprise DevOps Pipeline
+
+This project implements a complete enterprise-grade DevOps pipeline:
+
+- ☸️ **Kubernetes** - Container orchestration with EKS
+- 🏗️ **Terraform** - Infrastructure as Code (AWS)
+- 📦 **Helm** - Package management and templating
+- 🔄 **ArgoCD** - GitOps continuous deployment
+- 🔧 **Jenkins** - Advanced CI/CD orchestration
+- 📊 **Monitoring** - Prometheus, Grafana, ELK Stack
+- 🔒 **Security** - Trivy, Snyk, Falco, OPA Gatekeeper
+
+### Enterprise Features
+- **Auto-scaling** - HPA, VPA, Cluster Autoscaler
+- **High Availability** - Multi-AZ, PDB, Health Checks
+- **Security** - Network Policies, RBAC, Secrets Management
+- **Monitoring** - Custom metrics, Alerting, Dashboards
+- **GitOps** - Automated deployments with ArgoCD
+
+### Quick Enterprise Deploy
+```bash
+# Infrastructure setup
+cd terraform && terraform apply
+
+# Kubernetes deployment
+helm install cybersecurity-capstone ./helm/cybersecurity-capstone
+
+# GitOps setup
+kubectl apply -f argocd/applications.yaml
+```
+
 ## Docker Support
 
 This project includes full Docker support for containerized penetration testing:

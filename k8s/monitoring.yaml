@@ -1,0 +1,85 @@
+# Monitoring and Observability Stack
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: pentest-monitor
+  namespace: cybersecurity-capstone
+  labels:
+    app: pentest-env
+spec:
+  selector:
+    matchLabels:
+      app: pentest-env
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+---
+# PrometheusRule for Alerting
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: pentest-alerts
+  namespace: cybersecurity-capstone
+spec:
+  groups:
+  - name: pentest.rules
+    rules:
+    - alert: HighCPUUsage
+      expr: rate(container_cpu_usage_seconds_total[5m]) > 0.8
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High CPU usage detected"
+        description: "Pod {{ $labels.pod }} has high CPU usage"
+    - alert: HighMemoryUsage
+      expr: container_memory_usage_bytes / container_spec_memory_limit_bytes > 0.8
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High memory usage detected"
+        description: "Pod {{ $labels.pod }} has high memory usage"
+    - alert: AssessmentFailed
+      expr: increase(job_failed_total[1h]) > 0
+      for: 0m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Security assessment failed"
+        description: "Security assessment job has failed"
+---
+# Grafana Dashboard ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard
+  namespace: cybersecurity-capstone
+data:
+  dashboard.json: |
+    {
+      "dashboard": {
+        "title": "Cybersecurity Capstone Dashboard",
+        "panels": [
+          {
+            "title": "Assessment Status",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "up{job=\"pentest-env\"}"
+              }
+            ]
+          },
+          {
+            "title": "Resource Usage",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(container_cpu_usage_seconds_total[5m])"
+              }
+            ]
+          }
+        ]
+      }
+    }

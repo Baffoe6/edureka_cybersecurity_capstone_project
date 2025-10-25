@@ -1,0 +1,81 @@
+# ArgoCD Application for GitOps Deployment
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cybersecurity-capstone
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Baffoe6/edureka_cybersecurity_capstone_project.git
+    targetRevision: HEAD
+    path: k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cybersecurity-capstone
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+---
+# ArgoCD Application for Helm Chart
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cybersecurity-capstone-helm
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Baffoe6/edureka_cybersecurity_capstone_project.git
+    targetRevision: HEAD
+    path: helm/cybersecurity-capstone
+    helm:
+      valueFiles:
+        - values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cybersecurity-capstone
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+# ArgoCD Application for Monitoring Stack
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cybersecurity-capstone-monitoring
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    targetRevision: "25.x.x"
+    chart: prometheus
+    helm:
+      valueFiles:
+        - values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
