@@ -29,11 +29,19 @@ jobs:
       run: |
         # Install security scanning tools
         sudo apt-get update
-        sudo apt-get install -y nmap nikto dirb gobuster hydra sqlmap
+        sudo apt-get install -y nmap nikto dirb gobuster hydra sqlmap jq curl
         
         # Install container security tools
-        wget https://github.com/aquasecurity/trivy/releases/latest/download/trivy_Linux-64bit.tar.gz
-        tar -xzf trivy_Linux-64bit.tar.gz
+        # Get latest Trivy version and download with fallback
+        if command -v jq >/dev/null 2>&1; then
+          TRIVY_VERSION=$(curl -s https://api.github.com/repos/aquasecurity/trivy/releases/latest | jq -r '.tag_name' | sed 's/v//')
+        else
+          # Fallback: use a known working version
+          TRIVY_VERSION="0.50.0"
+        fi
+        echo "Downloading Trivy version: $TRIVY_VERSION"
+        wget https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz
+        tar -xzf trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz
         sudo mv trivy /usr/local/bin/
         
         # Install SAST tools
